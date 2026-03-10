@@ -1,0 +1,1366 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>SmartEdu – Docente</title>
+  <style>
+    :root{
+  color-scheme: light;
+
+  --bg: #f6f7fb;
+  --text: #111827;
+  --muted: rgba(17,24,39,.55);
+  --border: rgba(17,24,39,.08);
+
+  --card: rgba(255,255,255,.92);
+
+  --primary: #2b66f6;
+  --primary2: #6d5efc;
+
+  --shadow-sm: 0 1px 2px rgba(16,24,40,.06);
+  --shadow-md: 0 10px 30px rgba(16,24,40,.10);
+  --shadow-lg: 0 18px 55px rgba(16,24,40,.14);
+
+  --radius: 16px;
+  --radius-sm: 12px;
+
+  --ring: 0 0 0 4px rgba(43,102,246,.16);
+}
+
+*{box-sizing:border-box}
+html, body{height:100%}
+body{
+  margin:0;
+  font-family: Inter, ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 800px at 20% -10%, rgba(43, 102, 246, 0.10), transparent 60%),
+    radial-gradient(900px 600px at 90% 0%, rgba(99, 102, 241, 0.10), transparent 55%),
+    linear-gradient(180deg, #f7f8ff 0%, var(--bg) 55%, #f3f5ff 100%);
+}
+
+/* Scroll nicer */
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-thumb{
+  background: rgba(17,24,39,.16);
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,.75);
+}
+*::-webkit-scrollbar-track{background:transparent}
+
+/* ===== Shell / Sidebar ===== */
+.shell{display:flex;min-height:100vh}
+
+.sidebar{
+  width:240px;
+  padding:16px 14px;
+  display:flex;flex-direction:column;gap:12px;
+
+  color:#eaf0ff;
+  border-right: 1px solid rgba(255,255,255,.06);
+
+  background:
+    radial-gradient(900px 700px at 20% 0%, rgba(43,102,246,.22), transparent 60%),
+    radial-gradient(900px 700px at 90% 10%, rgba(109,94,252,.18), transparent 60%),
+    linear-gradient(180deg, #0b1220 0%, #0a1326 55%, #081021 100%);
+}
+
+.brand{
+  font-weight:800;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+  letter-spacing:.2px;
+}
+
+.brand-dot{
+  width:10px;height:10px;border-radius:999px;
+  background: linear-gradient(135deg, #22c55e 0%, #34d399 100%);
+  box-shadow: 0 0 0 5px rgba(34,197,94,.22), 0 10px 26px rgba(34,197,94,.14);
+}
+
+.nav-label{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.10em;
+  color: rgba(234,240,255,.55);
+  margin-top:8px;
+  margin-bottom:4px;
+}
+
+.nav-item{
+  width:100%;
+  border:1px solid transparent;
+  background: transparent;
+  color: rgba(234,240,255,.88);
+  text-align:left;
+  padding:10px 10px;
+  border-radius: 12px;
+  font-size:14px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  transition: transform .06s ease, background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.nav-item:hover{
+  background: rgba(43,102,246,.10);
+  border-color: rgba(43,102,246,.16);
+}
+
+.nav-item.active{
+  background: linear-gradient(135deg, rgba(43,102,246,.92) 0%, rgba(109,94,252,.88) 100%);
+  color:#fff;
+  box-shadow: 0 14px 30px rgba(43,102,246,.18);
+}
+
+.sidebar-footer{
+  margin-top:auto;
+  font-size:11px;
+  color: rgba(234,240,255,.50);
+}
+
+/* ===== Main wrapper ===== */
+.wrap{
+  flex:1;
+  max-width:1100px;
+  margin:0 auto;
+  padding:18px;
+}
+
+.grid{display:grid;gap:14px;grid-template-columns:1.2fr .8fr}
+.grid-2{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+
+.page-title{
+  font-size:22px;
+  font-weight:900;
+  margin:0 0 4px;
+  letter-spacing:-0.3px;
+}
+
+.page-subtitle{
+  margin:0 0 14px;
+  color: var(--muted);
+  font-size:13px;
+}
+
+/* ===== Cards / typography ===== */
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding:16px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+}
+
+.label{
+  font-size:12px;
+  color: var(--muted);
+}
+
+.muted{color: var(--muted)}
+
+.row{display:flex;gap:10px;align-items:center}
+
+/* ===== Inputs ===== */
+.select,.input,textarea{
+  width:100%;
+  background: rgba(255,255,255,.98);
+  border: 1px solid rgba(17,24,39,.12);
+  color: var(--text);
+  padding:10px 12px;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(16,24,40,.04);
+  transition: box-shadow .15s ease, border-color .15s ease, transform .06s ease;
+}
+
+textarea{min-height:120px;resize:vertical;line-height:1.45}
+
+.select:focus,.input:focus,textarea:focus{
+  outline:none;
+  border-color: rgba(43,102,246,.35);
+  box-shadow: var(--ring);
+}
+
+/* ===== Buttons ===== */
+.button{
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary2) 100%);
+  color:#fff;
+  border:0;
+  border-radius: 12px;
+  padding:10px 14px;
+  cursor:pointer;
+  white-space:nowrap;
+  font-weight:800;
+  box-shadow: 0 14px 34px rgba(43,102,246,.22);
+  transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.button:hover{
+  filter: brightness(1.03);
+  box-shadow: 0 18px 44px rgba(43,102,246,.26);
+}
+
+.button:active{transform: translateY(1px)}
+
+.button.secondary{
+  background: rgba(17,24,39,.06);
+  color: rgba(17,24,39,.85);
+  border: 1px solid rgba(17,24,39,.10);
+  box-shadow:none;
+  font-weight:800;
+}
+
+.button.secondary:hover{
+  background: rgba(17,24,39,.08);
+  border-color: rgba(17,24,39,.14);
+  filter:none;
+}
+
+.button.danger{
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+  box-shadow: 0 14px 34px rgba(239,68,68,.16);
+}
+
+/* ===== Pills / KPIs ===== */
+.pill{
+  padding:4px 10px;
+  border-radius: 999px;
+  border:1px solid rgba(17,24,39,.10);
+  background: rgba(17,24,39,.04);
+  color: rgba(17,24,39,.70);
+  font-size:12px;
+}
+
+.pill.green{
+  border-color: rgba(34,197,94,.25);
+  background: rgba(34,197,94,.10);
+  color: #065f46;
+}
+
+.kpi{
+  background: rgba(17,24,39,.03);
+  border: 1px solid rgba(17,24,39,.08);
+  border-radius: 14px;
+  padding:12px;
+}
+
+.kpi .big{
+  font-size:26px;
+  font-weight:950;
+  margin-top:2px;
+  letter-spacing:-0.4px;
+}
+
+/* ===== Views ===== */
+.view{display:none}
+.view.active{display:block}
+
+/* ===== Table ===== */
+.table{width:100%;border-collapse:separate;border-spacing:0}
+.table th,.table td{
+  padding:10px 10px;
+  border-bottom: 1px solid rgba(17,24,39,.08);
+  text-align:left;
+  vertical-align:top;
+}
+
+.table thead th{
+  font-size:12px;
+  color: rgba(17,24,39,.60);
+  font-weight:900;
+  background: rgba(17,24,39,.02);
+}
+
+.table tbody tr:hover td{
+  background: rgba(43,102,246,.04);
+}
+
+/* ===== Histogram ===== */
+.bars{
+  display:flex;
+  gap:6px;
+  align-items:flex-end;
+  height:120px;
+  padding:10px;
+  border: 1px solid rgba(17,24,39,.08);
+  border-radius: 14px;
+  background: rgba(255,255,255,.55);
+  box-shadow: var(--shadow-sm);
+}
+
+.bar{
+  flex:1;
+  min-width:10px;
+  border-radius: 10px 10px 6px 6px;
+  background: linear-gradient(180deg, rgba(43,102,246,.95), rgba(109,94,252,.85));
+  opacity:.92;
+  position:relative;
+}
+
+.bar:hover{opacity:1}
+
+.bar .bar-tip{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  top:-28px;
+  font-size:11px;
+  background: rgba(11,18,32,.95);
+  color:#fff;
+  padding:4px 8px;
+  border-radius: 10px;
+  display:none;
+  white-space:nowrap;
+  box-shadow: 0 16px 40px rgba(0,0,0,.25);
+}
+
+.bar:hover .bar-tip{display:block}
+
+.bar-labels{
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+  font-size:11px;
+  color: var(--muted);
+}
+.bar-labels span{flex:1;text-align:center}
+
+/* ===== Modal ===== */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background: rgba(11,18,32,.60);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  z-index:999;
+  backdrop-filter: blur(8px);
+}
+
+.modal-overlay.open{display:flex}
+
+.modal{
+  width:min(760px, 100%);
+  background: rgba(255,255,255,.96);
+  border: 1px solid rgba(17,24,39,.10);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.28);
+  overflow:hidden;
+}
+
+.modal-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 16px;
+  border-bottom: 1px solid rgba(17,24,39,.08);
+  background: rgba(17,24,39,.02);
+}
+
+.modal-close{
+  border:1px solid rgba(17,24,39,.10);
+  background: rgba(17,24,39,.03);
+  cursor:pointer;
+  font-size:18px;
+  line-height:1;
+  padding:6px 10px;
+  border-radius: 12px;
+}
+
+.modal-close:hover{background: rgba(17,24,39,.06)}
+
+.modal-body{padding:16px}
+
+.modal-footer{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  padding:12px 16px;
+  border-top: 1px solid rgba(17,24,39,.08);
+  background: rgba(17,24,39,.02);
+}
+
+/* ===== Responsive ===== */
+@media (max-width:1000px){
+  .shell{flex-direction:column}
+  .sidebar{width:100%;flex-direction:row;align-items:center;gap:10px}
+  .sidebar > div{display:flex;align-items:center;gap:10px}
+  .nav-label{display:none}
+  .nav-item{width:auto}
+  .sidebar-footer{margin-top:0;margin-left:auto}
+  .wrap{width:100%}
+  .grid{grid-template-columns:1fr}
+  .grid-2{grid-template-columns:1fr}
+}
+    
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div style="width:100%">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>SmartEdu</span>
+      </div>
+
+      <div class="nav-label">Vista</div>
+      <button class="nav-item active" data-view="dashboard"><span>Dashboard</span></button>
+      <button class="nav-item" data-view="questions"><span>Aulas &amp; Perguntas</span></button>
+      <button class="nav-item" data-view="answers"><span>Respostas &amp; Analítica</span></button>
+
+      <div class="nav-label" style="margin-top:12px">Sessão</div>
+      <button class="nav-item" id="btnLogout"><span>Sair</span></button>
+    </div>
+
+    <div class="sidebar-footer" id="sessionInfo">v0.3.2 • docente</div>
+  </aside>
+
+  <main class="wrap">
+    <!-- DASHBOARD -->
+    <section id="view-dashboard" class="view active">
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Visão geral por aula: média, alunos ativos, nº de respostas e distribuição de notas.</p>
+
+      <section class="card">
+        <div class="row" style="justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px">
+          <div style="min-width:260px; flex:1">
+            <div class="label">Aula</div>
+            <select id="lessonDash" class="select"></select>
+          </div>
+
+          <div class="row" style="gap:10px; flex-wrap:wrap; align-items:flex-end">
+            <div style="min-width:220px">
+              <div class="label">Aluno</div>
+              <select id="studentDash" class="select">
+                <option value="">Todos</option>
+              </select>
+            </div>
+
+            <div style="min-width:240px">
+              <div class="label">Pergunta</div>
+              <select id="qDash" class="select">
+                <option value="">Todas</option>
+              </select>
+            </div>
+
+            <div style="min-width:170px">
+              <div class="label">Classificação</div>
+              <select id="bandDash" class="select">
+                <option value="">Todas</option>
+                <option value="low">Baixas (0–49)</option>
+                <option value="mid">Médias (50–69)</option>
+                <option value="high">Altas (70–100)</option>
+              </select>
+            </div>
+
+            <button class="button secondary" id="btnRefreshDash">Atualizar</button>
+            <button class="button" id="btnExportPdf">Exportar PDF</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid" style="margin-top:14px">
+        <section class="card">
+          <div class="label">Indicadores</div>
+          <div class="grid-2" style="margin-top:10px">
+            <div class="kpi">
+              <div class="label">Respostas</div>
+              <div id="kDashTotal" class="big">0</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Alunos ativos</div>
+              <div id="kDashStudents" class="big">0</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Média</div>
+              <div id="kDashAvg" class="big">0%</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Distribuição (bins 10%)</div>
+              <div class="muted" style="font-size:12px;margin-top:4px">Ver gráfico abaixo.</div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px">
+            <div class="label">Distribuição de notas</div>
+            <div style="margin-top:8px">
+              <div class="bars" id="histBars"></div>
+              <div class="bar-labels" id="histLabels"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="label">Média por aula (visão geral)</div>
+          <div class="muted" style="font-size:12px;margin-top:6px">
+            Ordenado por média (desc). Clica numa aula para a selecionar.
+          </div>
+          <div id="allLessonsAvg" style="margin-top:10px"></div>
+
+          <div style="margin-top:14px">
+            <div class="label">Top erros (mistakes)</div>
+            <div id="dashErrors" style="margin-top:8px"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- AULAS & PERGUNTAS -->
+    <section id="view-questions" class="view">
+      <h1 class="page-title">Aulas &amp; Perguntas</h1>
+      <p class="page-subtitle">Criar aulas (nome + contexto), gerir perguntas e ativar a aula atual.</p>
+
+      <div class="grid">
+        <section class="card">
+          <div class="row" style="justify-content:space-between; align-items:flex-end; flex-wrap:wrap">
+            <div style="min-width:280px; flex:1">
+              <div class="label">Aula</div>
+              <select id="lesson" class="select"></select>
+            </div>
+
+            <div class="row" style="gap:10px; align-items:center">
+              <span id="lessonStatus" class="pill">—</span>
+              <button class="button secondary" id="btnActivateLesson">Ativar Aula</button>
+              <button class="button" id="btnCreateLesson">Criar Aula</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="label">Nova pergunta</div>
+            <div class="row">
+              <input id="qtext" class="input" placeholder="Escreve a pergunta…"/>
+              <button class="button" id="btnAdd">Inserir</button>
+            </div>
+            <div class="muted" style="font-size:12px;margin-top:6px">
+              Nota: o contexto é da aula (não é mostrado aqui).
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="label">Perguntas</div>
+            <div id="questions"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="label">Resumo da aula</div>
+          <div class="kpi">
+            <div>Respostas (aula selecionada)</div>
+            <div id="kTotalQuestionsView" class="big">0</div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="label">Erros mais frequentes (reais)</div>
+            <div id="errorsQuestionsView"></div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="label">Evolução (média por dia)</div>
+            <div id="evolutionQuestionsView"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- RESPOSTAS & ANALÍTICA -->
+    <section id="view-answers" class="view">
+      <h1 class="page-title">Respostas &amp; Analítica</h1>
+      <p class="page-subtitle">Filtrar respostas por pergunta, aluno, classificação e datas.</p>
+
+      <section class="card" style="margin-top:4px">
+        <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap">
+          <div class="row" style="gap:10px; align-items:center; flex-wrap:wrap">
+            <div>
+              <div class="label">Aula</div>
+              <select id="lessonAnswers" class="select" style="min-width:240px"></select>
+            </div>
+
+            <div>
+              <div class="label">Pergunta</div>
+              <select id="qfilter" class="select" style="min-width:240px"></select>
+            </div>
+
+            <div>
+              <div class="label">Aluno</div>
+              <select id="studentFilter" class="select" style="min-width:220px">
+                <option value="">Todos</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="label">Classificação</div>
+              <select id="bandFilter" class="select" style="min-width:190px">
+                <option value="">Todas</option>
+                <option value="low">Baixas (0–49)</option>
+                <option value="mid">Médias (50–69)</option>
+                <option value="high">Altas (70–100)</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="label">De</div>
+              <input id="fromDate" type="date" class="input" style="width:160px"/>
+            </div>
+
+            <div>
+              <div class="label">Até</div>
+              <input id="toDate" type="date" class="input" style="width:160px"/>
+            </div>
+
+            <div>
+              <div class="label">Limite</div>
+              <input id="limitFilter" type="number" min="10" max="2000" value="300"
+                     class="input" style="width:110px;padding:10px 12px"/>
+            </div>
+
+            <button class="button secondary" id="btnRefreshAnswers">Aplicar</button>
+          </div>
+        </div>
+
+        <div style="overflow:auto;margin-top:10px">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Aluno</th>
+                <th>Resposta</th>
+                <th>Pont.</th>
+                <th>Resumo (LLM)</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody id="answers"><tr><td colspan="5" class="muted">Sem dados.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+</div>
+
+<!-- MODAL Criar Aula -->
+<div id="lessonModal" class="modal-overlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lessonModalTitle">
+    <div class="modal-header">
+      <div>
+        <div id="lessonModalTitle" style="font-weight:700; font-size:16px;">Criar Aula</div>
+        <div class="muted" style="font-size:12px;margin-top:2px;">
+          Introduz o nome e carrega o contexto via ficheiro .txt. Podes também pré-criar perguntas (uma por linha).
+        </div>
+      </div>
+      <button class="modal-close" id="btnCloseLessonModal" title="Fechar">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="grid-2">
+        <div>
+          <div class="label">Nome da aula</div>
+          <input id="lessonName" class="input" placeholder="Ex.: Aula 9"/>
+        </div>
+        <div>
+          <div class="label">Estado</div>
+          <div class="kpi" style="height:42px;display:flex;align-items:center">
+            <span class="muted">A aula será criada em standby.</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="label">Contexto da aula (.txt)</div>
+        <input id="lessonContextFile" type="file" accept=".txt" class="input" />
+        <div class="muted" style="font-size:12px;margin-top:6px">
+          O conteúdo do ficheiro será usado pelo avaliador, mas não será mostrado no painel.
+        </div>
+
+        <div class="row" style="margin-top:10px; justify-content:flex-end">
+          <button type="button" class="button secondary" id="btnSuggestQs">
+            Sugerir perguntas (IA)
+          </button>
+        </div>
+
+        <div id="suggestionsBox" style="margin-top:10px"></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="label">Perguntas iniciais (opcional)</div>
+        <textarea id="lessonQuestionsInput" class="input" rows="6" placeholder="Uma pergunta por linha…"></textarea>
+      </div>
+
+      <div id="lessonCreateError" class="muted" style="display:none;margin-top:10px;color:#b42318"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="button secondary" id="btnCancelLesson">Cancelar</button>
+      <button class="button" id="btnSubmitLesson">Criar Aula</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = location.origin;
+
+// ===== AUTH =====
+function getToken(){ return localStorage.getItem("token") || ""; }
+function authHeaders(extra){
+  const t = getToken();
+  return {
+    "Content-Type": "application/json",
+    ...(t ? { "Authorization": "Bearer " + t } : {}),
+    ...(extra || {}),
+  };
+}
+
+function requireLogin(){
+  const t = getToken();
+  if (!t) location.href = "/login";
+}
+
+async function fetchMe(){
+  try{
+    const r = await fetch(BASE + "/auth/me", { headers: authHeaders() });
+    if(!r.ok) throw new Error("not ok");
+    const me = await r.json();
+    const label = (me?.name ? me.name : (me?.username || "Sessão")) + (me?.role ? (" • " + me.role) : "");
+    document.getElementById("sessionInfo").textContent = "v0.3.2 • " + label;
+  }catch(_){
+    // token inválido → volta para login
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("username");
+    localStorage.removeItem("name");
+    location.href="/login";
+  }
+}
+
+document.getElementById("btnLogout").onclick = async () => {
+  try{ await fetch(BASE + "/auth/logout", { method:"POST", headers: authHeaders() }); }catch(_){}
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("username");
+  localStorage.removeItem("name");
+  location.href="/login";
+};
+
+// ===== API helper (COM TOKEN) =====
+async function api(path, opts){
+  const o = opts || {};
+  const headers = authHeaders(o.headers || {});
+  const r = await fetch(BASE + path, { ...o, headers });
+
+  if (!r.ok) {
+    let msg = `Erro HTTP ${r.status}`;
+    try {
+      const data = await r.json();
+      if (data && data.detail) msg = data.detail;
+    } catch (_) {}
+
+    if (r.status === 401) {
+      // sessão expirou / sem token
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("username");
+      localStorage.removeItem("name");
+      location.href="/login";
+      return;
+    }
+
+    throw new Error(msg);
+  }
+
+  const ct = r.headers.get("content-type") || "";
+  if (ct.includes("application/json")) return r.json();
+  return r.text();
+}
+
+function setupNav(){
+  const navItems = document.querySelectorAll('.nav-item[data-view]');
+  navItems.forEach(btn=>{
+    btn.addEventListener('click', () => {
+      const view = btn.getAttribute('data-view');
+      navItems.forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.view').forEach(v => {
+        v.classList.toggle('active', v.id === 'view-' + view);
+      });
+    });
+  });
+}
+
+// ===== Modal helpers =====
+function openLessonModal(){
+  const overlay = document.getElementById('lessonModal');
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden', 'false');
+  document.getElementById('lessonCreateError').style.display = 'none';
+  document.getElementById('lessonName').focus();
+}
+function closeLessonModal(){
+  const overlay = document.getElementById('lessonModal');
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+function resetLessonModal(){
+  document.getElementById('lessonName').value = '';
+  document.getElementById('lessonQuestionsInput').value = '';
+  document.getElementById('lessonContextFile').value = '';
+  document.getElementById('lessonCreateError').style.display = 'none';
+  document.getElementById('suggestionsBox').innerHTML = '';
+}
+
+// ===== PDF (COM TOKEN) =====
+async function downloadPdfForLesson(lessonId){
+  if(!lessonId) return alert("Seleciona uma aula.");
+
+  const url = `${BASE}/reports/lesson/${encodeURIComponent(lessonId)}/pdf`;
+  const r = await fetch(url, { headers: authHeaders() });
+
+  if(!r.ok){
+    let msg = `Erro HTTP ${r.status}`;
+    try { const j = await r.json(); if(j && j.detail) msg = j.detail; } catch(_){}
+    if (r.status === 401){ location.href="/login"; return; }
+    alert(msg);
+    return;
+  }
+
+  const blob = await r.blob();
+  const a = document.createElement('a');
+  const href = URL.createObjectURL(blob);
+  a.href = href;
+  a.download = `relatorio_${lessonId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(href);
+}
+
+// ===== Sugestões IA =====
+async function suggestQuestionsFromContextFile(){
+  const fileInput = document.getElementById('lessonContextFile');
+  const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+  if(!file) return alert("Carrega primeiro um ficheiro .txt de contexto.");
+
+  const ctx = await file.text();
+  const box = document.getElementById('suggestionsBox');
+  box.innerHTML = `<div class="muted">A gerar sugestões…</div>`;
+
+  try{
+    const data = await api('/lessons/suggest-questions', {
+      method: 'POST',
+      body: JSON.stringify({ context: ctx, n: 6 })
+    });
+
+    const qs = data.questions || [];
+    if(!qs.length){
+      box.innerHTML = `<div class="muted">Não foram geradas sugestões.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="label">Sugestões</div>
+      <div style="display:grid; gap:8px; margin-top:6px">
+        ${qs.map((q,i)=>`
+          <label style="display:flex; gap:10px; align-items:flex-start; border:1px solid #eef1f6; padding:10px; border-radius:10px">
+            <input type="checkbox" class="suggestQ" data-q="${escapeAttr(q)}" checked />
+            <div style="flex:1">
+              <div style="font-weight:600">Sugestão ${i+1}</div>
+              <div class="muted" style="margin-top:2px">${escapeHtml(q)}</div>
+            </div>
+          </label>
+        `).join('')}
+      </div>
+      <div class="row" style="justify-content:flex-end; margin-top:10px">
+        <button type="button" class="button secondary" id="btnAddSelectedQs">Adicionar selecionadas</button>
+      </div>
+    `;
+
+    document.getElementById('btnAddSelectedQs').onclick = () => {
+      const picks = Array.from(document.querySelectorAll('.suggestQ'))
+        .filter(cb => cb.checked)
+        .map(cb => cb.getAttribute('data-q') || '')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const ta = document.getElementById('lessonQuestionsInput');
+      const existing = ta.value ? ta.value.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+      const merged = [...existing];
+
+      for (const q of picks){
+        if (!merged.some(x => x.toLowerCase() === q.toLowerCase())) merged.push(q);
+      }
+      ta.value = merged.join('\n');
+    };
+
+  } catch(e){
+    box.innerHTML = `<div class="muted" style="color:#b42318">Erro: ${escapeHtml(e.message || 'falha')}</div>`;
+  }
+}
+
+let _lessonsCache = [];
+let _questionsCacheByLesson = {};
+let _studentsCacheByLesson = {};
+
+function bandToMinMax(band){
+  if (!band) return {min:null, max:null};
+  if (band === 'low') return {min:0, max:49};
+  if (band === 'mid') return {min:50, max:69};
+  if (band === 'high') return {min:70, max:100};
+  return {min:null, max:null};
+}
+
+async function loadStudentsForLesson(lessonId){
+  try{
+    const rows = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/students`);
+    _studentsCacheByLesson[lessonId] = rows || [];
+
+    const sel = document.getElementById('studentFilter');
+    sel.innerHTML = ['<option value="">Todos</option>'].concat(
+      (_studentsCacheByLesson[lessonId]||[]).map(s => `<option value="${escapeAttr(s.studentId)}">${escapeHtml(s.studentName)} (${escapeHtml(s.studentId)})</option>`)
+    ).join('');
+
+    const selD = document.getElementById('studentDash');
+    selD.innerHTML = ['<option value="">Todos</option>'].concat(
+      (_studentsCacheByLesson[lessonId]||[]).map(s => `<option value="${escapeAttr(s.studentId)}">${escapeHtml(s.studentName)} (${escapeHtml(s.studentId)})</option>`)
+    ).join('');
+  } catch(e){
+    _studentsCacheByLesson[lessonId] = [];
+  }
+}
+
+async function loadLessons(){
+  const lessons = await api('/lessons');
+  _lessonsCache = lessons || [];
+
+  const selQuestions = document.getElementById('lesson');
+  const selAnswers = document.getElementById('lessonAnswers');
+  const selDash = document.getElementById('lessonDash');
+
+  if (!_lessonsCache.length){
+    selQuestions.innerHTML = `<option value="" selected>Sem aulas</option>`;
+    selAnswers.innerHTML = `<option value="" selected>Sem aulas</option>`;
+    selDash.innerHTML = `<option value="" selected>Sem aulas</option>`;
+    return;
+  }
+
+  const options = _lessonsCache.map(l=>{
+    const label = `${l.name}${l.active ? ' • (ativa)' : ''}`;
+    return `<option value="${l.id}">${label}</option>`;
+  }).join('');
+
+  selQuestions.innerHTML = options;
+  selAnswers.innerHTML = options;
+  selDash.innerHTML = options;
+
+  const active = _lessonsCache.find(l=>l.active);
+  const chosenId = (active && active.id) ? active.id : _lessonsCache[0].id;
+
+  selQuestions.value = chosenId;
+  selAnswers.value = chosenId;
+  selDash.value = chosenId;
+
+  await refreshForLesson(chosenId);
+  await refreshAnswersView(chosenId);
+  await refreshDashboard(chosenId);
+  await refreshAllLessonsOverview();
+
+  selQuestions.onchange = async ()=> {
+    const id = selQuestions.value;
+    selAnswers.value = id; selDash.value = id;
+    await refreshForLesson(id);
+    await refreshAnswersView(id);
+    await refreshDashboard(id);
+  };
+  selAnswers.onchange = async ()=> {
+    const id = selAnswers.value;
+    selQuestions.value = id; selDash.value = id;
+    await refreshForLesson(id);
+    await refreshAnswersView(id);
+    await refreshDashboard(id);
+  };
+  selDash.onchange = async ()=> {
+    const id = selDash.value;
+    selQuestions.value = id; selAnswers.value = id;
+    await refreshForLesson(id);
+    await refreshAnswersView(id);
+    await refreshDashboard(id);
+  };
+}
+
+async function refreshForLesson(lessonId){
+  const qs = await api(`/lessons/${encodeURIComponent(lessonId)}/questions?onlyActive=false`);
+  _questionsCacheByLesson[lessonId] = qs || [];
+
+  const box = document.getElementById('questions');
+  box.innerHTML = qs.length ? qs.map(q => `
+    <div class="row" style="justify-content:space-between;border:1px solid #eef1f6;padding:10px;border-radius:10px;margin:6px 0">
+      <div>
+        <div style="font-weight:600">${escapeHtml(q.text)}</div>
+        <div class="label">Criada em ${new Date(q.createdAt).toLocaleString()}</div>
+      </div>
+      <div class="row">
+        <span class="pill">${q.active ? 'Ativa' : 'Inativa'}</span>
+        <button class="button danger" onclick="delQ('${escapeAttr(q.id)}')">Remover</button>
+      </div>
+    </div>
+  `).join('') : '<div class="muted">Sem perguntas nesta aula.</div>';
+
+  const qfilter = document.getElementById('qfilter');
+  qfilter.innerHTML = '<option value="">Todas</option>' + qs.map(q=>`<option value="${escapeAttr(q.id)}">${escapeHtml((q.text||'').slice(0,80))}${q.text.length>80?'…':''}</option>`).join('');
+
+  const qDash = document.getElementById('qDash');
+  qDash.innerHTML = '<option value="">Todas</option>' + qs.map(q=>`<option value="${escapeAttr(q.id)}">${escapeHtml((q.text||'').slice(0,80))}${q.text.length>80?'…':''}</option>`).join('');
+
+  await loadAnswersCount(lessonId);
+  await loadErrorsReal(lessonId);
+  await loadEvolution(lessonId);
+}
+
+async function refreshAnswersView(lessonId){
+  await loadStudentsForLesson(lessonId);
+
+  document.getElementById('btnRefreshAnswers').onclick = () => loadAnswersWithFilters(lessonId);
+  document.getElementById('qfilter').onchange = () => loadAnswersWithFilters(lessonId);
+  document.getElementById('studentFilter').onchange = () => loadAnswersWithFilters(lessonId);
+  document.getElementById('bandFilter').onchange = () => loadAnswersWithFilters(lessonId);
+  document.getElementById('fromDate').onchange = () => loadAnswersWithFilters(lessonId);
+  document.getElementById('toDate').onchange = () => loadAnswersWithFilters(lessonId);
+  document.getElementById('limitFilter').onchange = () => loadAnswersWithFilters(lessonId);
+
+  await loadAnswersWithFilters(lessonId);
+}
+
+async function refreshDashboard(lessonId){
+  await loadStudentsForLesson(lessonId);
+
+  document.getElementById('btnRefreshDash').onclick = () => refreshDashboard(lessonId);
+  document.getElementById('studentDash').onchange = () => refreshDashboard(lessonId);
+  document.getElementById('qDash').onchange = () => refreshDashboard(lessonId);
+  document.getElementById('bandDash').onchange = () => refreshDashboard(lessonId);
+
+  document.getElementById('btnExportPdf').onclick = () => downloadPdfForLesson(lessonId);
+
+  await loadDashboardData(lessonId);
+}
+
+async function loadDashboardData(lessonId){
+  const sid = document.getElementById('studentDash').value || '';
+  const qid = document.getElementById('qDash').value || '';
+  const band = document.getElementById('bandDash').value || '';
+  const mm = bandToMinMax(band);
+
+  const sp = new URLSearchParams();
+  if (qid) sp.append('questionId', qid);
+  if (sid) sp.append('studentId', sid);
+  if (mm.min !== null) sp.append('minScore', String(mm.min));
+  if (mm.max !== null) sp.append('maxScore', String(mm.max));
+
+  let summary = null;
+  try{
+    summary = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/summary?` + sp.toString());
+  } catch(e){
+    summary = null;
+  }
+
+  const ep = new URLSearchParams();
+  if (qid) ep.append('questionId', qid);
+  if (sid) ep.append('studentId', sid);
+  if (mm.min !== null) ep.append('minScore', String(mm.min));
+  if (mm.max !== null) ep.append('maxScore', String(mm.max));
+  ep.append('top','8');
+
+  let errors = [];
+  try{
+    errors = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/errors-top?` + ep.toString());
+  } catch(e){
+    errors = [];
+  }
+
+  renderDashboard(summary, errors);
+}
+
+function renderDashboard(summary, errors){
+  const s = summary || { totalResponses:0, totalStudents:0, avg:0, histBins:[0,0,0,0,0,0,0,0,0,0] };
+
+  document.getElementById('kDashTotal').textContent = String(s.totalResponses || 0);
+  document.getElementById('kDashStudents').textContent = String(s.totalStudents || 0);
+  document.getElementById('kDashAvg').textContent = `${s.avg || 0}%`;
+
+  renderHistogram(s.histBins || [0,0,0,0,0,0,0,0,0,0]);
+
+  const ebox = document.getElementById('dashErrors');
+  ebox.innerHTML = (errors && errors.length)
+    ? errors.map(r => `
+        <div class="row" style="justify-content:space-between;border:1px solid #eef1f6;border-radius:10px;padding:8px 10px;margin:6px 0">
+          <div style="flex:1">${escapeHtml(r.pattern)}</div>
+          <div class="pill">${r.count}</div>
+        </div>
+      `).join('')
+    : `<div class="muted">Sem dados.</div>`;
+}
+
+function renderHistogram(bins){
+  const bars = document.getElementById('histBars');
+  const labels = document.getElementById('histLabels');
+
+  const maxV = Math.max(1, ...(bins||[1]));
+  const ranges = ['0–9','10–19','20–29','30–39','40–49','50–59','60–69','70–79','80–89','90–100'];
+
+  bars.innerHTML = (bins||[]).map((v, i) => {
+    const h = Math.round((v / maxV) * 100);
+    return `<div class="bar" style="height:${h}%">
+      <div class="bar-tip">${ranges[i]}: ${v}</div>
+    </div>`;
+  }).join('');
+
+  labels.innerHTML = ranges.map(r => `<span>${r.split('–')[0]}</span>`).join('');
+}
+
+// visão geral: média por aula
+async function refreshAllLessonsOverview(){
+  const target = document.getElementById('allLessonsAvg');
+  if (!_lessonsCache.length){
+    target.innerHTML = `<div class="muted">Sem aulas.</div>`;
+    return;
+  }
+
+  const rows = [];
+  for (const l of _lessonsCache){
+    try{
+      const s = await api(`/reports/lesson/${encodeURIComponent(l.id)}/summary`);
+      rows.push({ lessonId:l.id, name:l.name, avg:s.avg||0, total:s.totalResponses||0 });
+    } catch(e){
+      rows.push({ lessonId:l.id, name:l.name, avg:0, total:0 });
+    }
+  }
+  rows.sort((a,b)=> (b.avg - a.avg) || (b.total - a.total));
+
+  target.innerHTML = rows.map(r => `
+    <div class="row" style="justify-content:space-between;border:1px solid #eef1f6;border-radius:10px;padding:8px 10px;margin:6px 0">
+      <div style="flex:1">
+        <div style="font-weight:600">${escapeHtml(r.name)}</div>
+        <div class="label">n=${r.total}</div>
+      </div>
+      <div class="row" style="gap:8px">
+        <div class="pill">${r.avg}%</div>
+        <button class="button secondary" onclick="selectLessonDash('${escapeAttr(r.lessonId)}')">Abrir</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectLessonDash(lessonId){
+  document.getElementById('lessonDash').value = lessonId;
+  document.getElementById('lesson').value = lessonId;
+  document.getElementById('lessonAnswers').value = lessonId;
+  refreshForLesson(lessonId);
+  refreshAnswersView(lessonId);
+  refreshDashboard(lessonId);
+}
+
+// answers count (questions view)
+async function loadAnswersCount(lessonId){
+  const params = new URLSearchParams();
+  params.append('lessonId', lessonId);
+  const data = await api(`/answers?` + params.toString());
+  document.getElementById('kTotalQuestionsView').textContent = data.length;
+}
+
+// errors real (questions view)
+async function loadErrorsReal(lessonId){
+  const target = document.getElementById('errorsQuestionsView');
+  try{
+    const rows = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/errors-top?top=8`);
+    target.innerHTML =
+      rows.length ? rows.map(r => `
+        <div class="row" style="justify-content:space-between;border:1px solid #eef1f6;border-radius:10px;padding:8px 10px;margin:6px 0">
+          <div>${escapeHtml(r.pattern)}</div>
+          <div class="pill">${r.count}</div>
+        </div>`).join('') : '<div class="muted">Sem dados.</div>';
+  } catch(e){
+    target.innerHTML = '<div class="muted">Sem dados.</div>';
+  }
+}
+
+async function loadEvolution(lessonId){
+  const target = document.getElementById('evolutionQuestionsView');
+  try{
+    const rows = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/evolution`);
+    target.innerHTML =
+      rows.length ? rows.map(r => `
+        <div class="row" style="justify-content:space-between;border-bottom:1px dashed #eef1f6;padding:6px 0">
+          <div>${escapeHtml(r.date)}</div><b>${r.avg}%</b>
+        </div>`).join('') : '<div class="muted">Sem dados.</div>';
+  } catch(e){
+    target.innerHTML = '<div class="muted">Sem dados.</div>';
+  }
+}
+
+// answers table
+async function loadAnswersWithFilters(lessonId){
+  const qid = document.getElementById('qfilter').value || '';
+  const sid = document.getElementById('studentFilter').value || '';
+  const band = document.getElementById('bandFilter').value || '';
+  const fromD = document.getElementById('fromDate').value || '';
+  const toD = document.getElementById('toDate').value || '';
+  const limit = document.getElementById('limitFilter').value || '300';
+  const mm = bandToMinMax(band);
+
+  const params = new URLSearchParams();
+  params.append('lessonId', lessonId);
+  if (qid) params.append('questionId', qid);
+  if (sid) params.append('studentId', sid);
+  if (mm.min !== null) params.append('minScore', String(mm.min));
+  if (mm.max !== null) params.append('maxScore', String(mm.max));
+  if (fromD) params.append('fromDate', fromD);
+  if (toD) params.append('toDate', toD);
+  if (limit) params.append('limit', String(limit));
+
+  const data = await api(`/answers?` + params.toString());
+  const tb = document.getElementById('answers');
+
+  if(!data.length){
+    tb.innerHTML = '<tr><td colspan="5" class="muted">Sem dados.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = data.map(a => {
+    let mistakes = [];
+    try { mistakes = a.mistakes ? JSON.parse(a.mistakes) : []; if (!Array.isArray(mistakes)) mistakes = []; }
+    catch(e){ mistakes = []; }
+
+    let overview = a.rationale || '';
+    if (!overview && mistakes.length) overview = mistakes.join(' ');
+    const shortOverview = overview ? (overview.length > 180 ? overview.slice(0,180) + '…' : overview) : '-';
+    const errsTooltip = mistakes.length ? mistakes.map(m => `• ${m}`).join('\n') : '';
+
+    const safeText = escapeHtml(a.text || '');
+    const shortText = safeText.length>140 ? safeText.slice(0,140)+'…' : safeText;
+
+    return `
+      <tr>
+        <td><b>${escapeHtml(a.studentName || '')}</b><div class="label">${escapeHtml(a.studentId || '')}</div></td>
+        <td title="${safeText.replace(/"/g,'&quot;')}">${shortText}</td>
+        <td>${a.score ?? '-'}</td>
+        <td title="${escapeHtml(errsTooltip).replace(/"/g,'&quot;')}">${escapeHtml(shortOverview)}</td>
+        <td class="label">${new Date(a.createdAt).toLocaleString()}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// manage questions
+async function addQ(){
+  const lessonId = document.getElementById('lesson').value;
+  const txt = (document.getElementById('qtext').value || '').trim();
+  if(!lessonId) return alert('Seleciona uma aula.');
+  if(!txt) return alert('Escreve a pergunta.');
+
+  await api(`/lessons/${encodeURIComponent(lessonId)}/questions`, {
+    method:'POST',
+    body: JSON.stringify({ text: txt, active: true })
+  });
+  document.getElementById('qtext').value = '';
+  await refreshForLesson(lessonId);
+  await refreshDashboard(lessonId);
+  await refreshAllLessonsOverview();
+}
+
+async function delQ(id){
+  if(!confirm('Remover esta pergunta?')) return;
+  await api(`/questions/${encodeURIComponent(id)}`, { method:'DELETE' });
+  const lessonId = document.getElementById('lesson').value;
+  await refreshForLesson(lessonId);
+  await refreshDashboard(lessonId);
+}
+
+async function createLesson(){
+  const name = (document.getElementById('lessonName').value || '').trim();
+  const fileInput = document.getElementById('lessonContextFile');
+  const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+
+  const qLines = (document.getElementById('lessonQuestionsInput').value || '')
+    .split('\n').map(s=>s.trim()).filter(Boolean);
+
+  const errBox = document.getElementById('lessonCreateError');
+  errBox.style.display = 'none';
+
+  if (!name){
+    errBox.textContent = 'Indica o nome da aula (ex.: Aula 9).';
+    errBox.style.display = 'block';
+    return;
+  }
+
+  let context = "";
+  if (file) {
+    try { context = await file.text(); }
+    catch (e) {
+      errBox.textContent = 'Não foi possível ler o ficheiro .txt.';
+      errBox.style.display = 'block';
+      return;
+    }
+  }
+
+  try{
+    const lesson = await api('/lessons', {
+      method:'POST',
+      body: JSON.stringify({ name, context, questions: qLines })
+    });
+
+    closeLessonModal();
+    resetLessonModal();
+
+    await loadLessons();
+    await refreshAllLessonsOverview();
+
+    document.getElementById('lessonDash').value = lesson.id;
+    document.getElementById('lesson').value = lesson.id;
+    document.getElementById('lessonAnswers').value = lesson.id;
+
+    await refreshForLesson(lesson.id);
+    await refreshAnswersView(lesson.id);
+    await refreshDashboard(lesson.id);
+  } catch(e){
+    errBox.textContent = e.message || 'Erro ao criar aula.';
+    errBox.style.display = 'block';
+  }
+}
+
+// helpers
+function escapeHtml(str){
+  return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+}
+function escapeAttr(str){
+  return String(str||'').replaceAll('"','&quot;').replaceAll("'","&#39;");
+}
+
+// init
+requireLogin();
+fetchMe();
+setupNav();
+
+document.getElementById('btnAdd').onclick = addQ;
+document.getElementById('btnCreateLesson').onclick = () => { resetLessonModal(); openLessonModal(); };
+document.getElementById('btnCloseLessonModal').onclick = closeLessonModal;
+document.getElementById('btnCancelLesson').onclick = closeLessonModal;
+document.getElementById('btnSubmitLesson').onclick = createLesson;
+document.getElementById('btnSuggestQs').onclick = suggestQuestionsFromContextFile;
+
+document.getElementById('lessonModal').addEventListener('click', (e)=>{
+  if (e.target && e.target.id === 'lessonModal') closeLessonModal();
+});
+document.addEventListener('keydown', (e)=>{
+  if (e.key === 'Escape'){
+    const overlay = document.getElementById('lessonModal');
+    if (overlay.classList.contains('open')) closeLessonModal();
+  }
+});
+
+loadLessons().then(refreshAllLessonsOverview);
+</script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ClassBot — Login</title>
+
+<style>
+:root{
+  --bg:#1f1f1f;
+  --panel:#eeeeee;
+  --text:#2b2b2b;
+  --muted:#6c6c6c;
+  --border:#cfcfcf;
+  --primary:#a21c26;
+  --primaryHover:#7e121b;
+  --shadow:0 10px 30px rgba(0,0,0,.40);
+}
+
+*{ box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+
+body{
+  margin:0;
+  height:100vh;
+  display:flex;
+  background:var(--bg);
+}
+
+/* =========================
+   LADO ESQUERDO (BOAS-VINDAS)
+   ========================= */
+.left{
+  flex:1;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:56px;
+  background:
+    radial-gradient(1200px 600px at 20% 30%, rgba(255,255,255,.06), transparent 60%),
+    radial-gradient(900px 500px at 70% 80%, rgba(255,255,255,.05), transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.45));
+}
+
+/* opcional: um padrão subtil tipo "teclado" */
+.left::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:.10;
+  background-image:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.10) 0 2px, transparent 2px 18px);
+  pointer-events:none;
+}
+
+.left-content{
+  position:relative;
+  max-width:640px;
+  text-align:left;
+  color:#fff;
+}
+
+.left-logo{
+  width:120px;
+  height:auto;
+  display:block;
+  margin-bottom:22px;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,.35));
+}
+
+.left h1{
+  margin:0 0 12px;
+  font-size:52px;
+  line-height:1.05;
+  letter-spacing:-0.02em;
+  text-shadow:0 10px 25px rgba(0,0,0,.35);
+}
+
+.left p{
+  margin:0;
+  font-size:18px;
+  line-height:1.55;
+  color:rgba(255,255,255,.85);
+}
+
+.left .tag{
+  display:inline-block;
+  margin-top:18px;
+  padding:10px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  font-size:13px;
+  color:rgba(255,255,255,.9);
+}
+
+/* =========================
+   LADO DIREITO (LOGIN)
+   ========================= */
+.right{
+  width:min(460px, 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:var(--bg);
+}
+
+.card{
+  width:360px;
+  background:var(--panel);
+  border-radius:6px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.card-inner{
+  padding:26px 26px 18px;
+  text-align:center;
+}
+
+.title{
+  font-size:18px;
+  font-weight:600;
+  color:var(--text);
+  margin:0 0 14px;
+}
+
+/* tabs */
+.tabs{
+  display:flex;
+  gap:8px;
+  margin:0 auto 14px;
+  background:#e4e4e4;
+  padding:6px;
+  border-radius:8px;
+}
+
+.tab{
+  flex:1;
+  border:0;
+  background:transparent;
+  padding:10px 8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:600;
+  color:#444;
+}
+
+.tab.active{
+  background:#ffffff;
+  box-shadow:0 3px 10px rgba(0,0,0,.10);
+  color:#222;
+}
+
+/* form */
+.form{
+  text-align:left;
+  margin-top:6px;
+}
+
+label{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin:10px 0 6px;
+}
+
+input{
+  width:100%;
+  padding:12px 12px;
+  border:1px solid var(--border);
+  border-radius:4px;
+  font-size:15px;
+  outline:none;
+  background:#f7fbff;
+}
+
+input:focus{
+  border-color:#9bb3c7;
+  box-shadow:0 0 0 3px rgba(120,160,190,.25);
+  background:#fff;
+}
+
+.actions{
+  margin-top:14px;
+}
+
+button.primary{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:4px;
+  background:var(--primary);
+  color:#fff;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.18s;
+}
+
+button.primary:hover{ background:var(--primaryHover); }
+
+.help{
+  margin-top:10px;
+  font-size:12px;
+  color:var(--muted);
+  text-align:center;
+}
+
+/* erro */
+.err{
+  margin-top:10px;
+  color:#b00020;
+  font-size:14px;
+  min-height:18px;
+  text-align:center;
+}
+
+/* esconder/mostrar modos */
+.hidden{ display:none; }
+
+/* responsivo */
+@media (max-width: 900px){
+  .left{ display:none; }
+  .right{ width:100%; }
+}
+</style>
+</head>
+
+<body>
+
+  <!-- ESQUERDA: boas-vindas -->
+  <div class="left">
+    <div class="left-content">
+      <img src="static/uminho.jpg" class="left-logo" alt="UMinho">
+      <h1>Bem-vindo ao ClassBot</h1>
+      <p>
+        Plataforma inteligente de apoio às aulas.<br>
+        Universidade do Minho
+      </p>
+      <div class="tag">Acede com nº mecanográfico ou email institucional</div>
+    </div>
+  </div>
+
+  <!-- DIREITA: card login -->
+  <div class="right">
+    <div class="card">
+      <div class="card-inner">
+
+        <h1 class="title">Autenticação</h1>
+
+        <div class="tabs" role="tablist">
+          <button id="tabLogin" class="tab active" onclick="showMode('login')" type="button">Iniciar sessão</button>
+          <button id="tabReg" class="tab" onclick="showMode('register')" type="button">Registar</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="loginMode">
+          <div class="form">
+            <label for="username">Utilizador</label>
+            <input id="username" placeholder="a12345 / pg123 / d1234 / email" autocomplete="username"/>
+
+            <label for="password">Password</label>
+            <input id="password" type="password" placeholder="Password" autocomplete="current-password"/>
+
+            <div class="actions">
+              <button class="primary" onclick="doLogin()" type="button">Iniciar sessão</button>
+            </div>
+
+            <div class="help">Login com nº mecanográfico ou email institucional.</div>
+          </div>
+        </div>
+
+        <!-- REGISTO (ALUNO) -->
+        <div id="registerMode" class="hidden">
+          <div class="form">
+            <label for="name">Nome</label>
+            <input id="name" placeholder="O teu nome" autocomplete="name"/>
+
+            <label for="regUsername">Utilizador</label>
+            <input id="regUsername" placeholder="a12345 / pg123 / email" autocomplete="username"/>
+
+            <label for="regPassword">Password</label>
+            <input id="regPassword" type="password" placeholder="Password" autocomplete="new-password"/>
+
+            <div class="actions">
+              <button class="primary" onclick="doRegister()" type="button">Criar conta</button>
+            </div>
+
+            <div class="help">Registo apenas para alunos (nome + utilizador + password).</div>
+          </div>
+        </div>
+
+        <div id="err" class="err"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API_BASE = location.origin;
+
+// muda isto conforme o teu setup:
+const STUDENT_APP_URL = "/app";   // frontoffice React servido pelo FastAPI
+const TEACHER_URL = "/admin";     // admin.html servido pelo FastAPI
+
+function setErr(msg){ document.getElementById("err").textContent = msg || ""; }
+
+function clearSession(){
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("username");
+  localStorage.removeItem("name");
+}
+
+function showMode(mode){
+  setErr("");
+  const login = document.getElementById("loginMode");
+  const reg = document.getElementById("registerMode");
+  const tabLogin = document.getElementById("tabLogin");
+  const tabReg = document.getElementById("tabReg");
+
+  if(mode === "register"){
+    login.classList.add("hidden");
+    reg.classList.remove("hidden");
+    tabLogin.classList.remove("active");
+    tabReg.classList.add("active");
+  }else{
+    reg.classList.add("hidden");
+    login.classList.remove("hidden");
+    tabReg.classList.remove("active");
+    tabLogin.classList.add("active");
+  }
+}
+
+async function doLogin(){
+  setErr("");
+
+  // importante: limpa sessão antiga para não ficar preso a dados anteriores (ex: "Ana Silva")
+  clearSession();
+
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!username || !password){ setErr("Preenche utilizador e password."); return; }
+
+  const res = await fetch(API_BASE + "/auth/login", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+  const data = await res.json().catch(()=>null);
+  if(!res.ok){ setErr(data?.detail || ("Erro " + res.status)); return; }
+
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("role", data.role);
+  localStorage.setItem("username", data.username);
+  localStorage.setItem("name", data.name);
+
+  if(data.role === "teacher"){
+    location.replace(TEACHER_URL);
+  } else {
+    location.replace(STUDENT_APP_URL);
+  }
+}
+
+async function doRegister(){
+  setErr("");
+
+  // opcional/seguro: limpa sessão antiga antes de registar
+  clearSession();
+
+  const name = document.getElementById("name").value.trim();
+  const username = document.getElementById("regUsername").value.trim();
+  const password = document.getElementById("regPassword").value;
+
+  if(!name || !username || !password){
+    setErr("Para registar, preenche nome, utilizador e password.");
+    return;
+  }
+
+  const res = await fetch(API_BASE + "/auth/register", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ username, password, name })
+  });
+
+  const data = await res.json().catch(()=>null);
+  if(!res.ok){ setErr(data?.detail || ("Erro " + res.status)); return; }
+
+  setErr("Registo OK. Agora faz login.");
+  showMode("login");
+
+  // opcional: copiar user para o login
+  document.getElementById("username").value = username;
+  document.getElementById("password").value = "";
+}
+</script>
+</body>
+</html>
