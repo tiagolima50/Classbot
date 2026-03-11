@@ -707,52 +707,69 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
 const BASE = location.origin;
 
 // ===== AUTH =====
-function getToken(){ return localStorage.getItem("token") || ""; }
-function authHeaders(extra){
+function getToken() {
+  return localStorage.getItem("token") || "";
+}
+
+function authHeaders(extra) {
   const t = getToken();
   return {
     "Content-Type": "application/json",
-    ...(t ? { "Authorization": "Bearer " + t } : {}),
+    ...(t ? { Authorization: "Bearer " + t } : {}),
     ...(extra || {}),
   };
 }
 
-function requireLogin(){
+function requireLogin() {
   const t = getToken();
   if (!t) location.href = "/login";
 }
 
-async function fetchMe(){
-  try{
+async function fetchMe() {
+  try {
     const r = await fetch(BASE + "/auth/me", { headers: authHeaders() });
-    if(!r.ok) throw new Error("not ok");
+    if (!r.ok) throw new Error("not ok");
+
     const me = await r.json();
-    const label = (me?.name ? me.name : (me?.username || "Sessão")) + (me?.role ? (" • " + me.role) : "");
+
+    if (me?.role && me.role !== "teacher") {
+      location.href = "/app";
+      return;
+    }
+
+    const label =
+      (me?.name ? me.name : me?.username || "Sessão") +
+      (me?.role ? " • " + me.role : "");
+
     document.getElementById("sessionInfo").textContent = "v0.3.2 • " + label;
-  }catch(_){
-    // token inválido → volta para login
+  } catch (_) {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("username");
     localStorage.removeItem("name");
-    location.href="/login";
+    location.href = "/login";
   }
 }
 
 document.getElementById("btnLogout").onclick = async () => {
-  try{ await fetch(BASE + "/auth/logout", { method:"POST", headers: authHeaders() }); }catch(_){}
+  try {
+    await fetch(BASE + "/auth/logout", {
+      method: "POST",
+      headers: authHeaders(),
+    });
+  } catch (_) {}
+
   localStorage.removeItem("token");
   localStorage.removeItem("role");
   localStorage.removeItem("username");
   localStorage.removeItem("name");
-  location.href="/login";
+  location.href = "/login";
 };
 
-// ===== API helper (COM TOKEN) =====
-async function api(path, opts){
-  const o = opts || {};
-  const headers = authHeaders(o.headers || {});
-  const r = await fetch(BASE + path, { ...o, headers });
+// ===== API helper =====
+async function api(path, opts = {}) {
+  const headers = authHeaders(opts.headers || {});
+  const r = await fetch(BASE + path, { ...opts, headers });
 
   if (!r.ok) {
     let msg = `Erro HTTP ${r.status}`;
@@ -762,12 +779,11 @@ async function api(path, opts){
     } catch (_) {}
 
     if (r.status === 401) {
-      // sessão expirou / sem token
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("username");
       localStorage.removeItem("name");
-      location.href="/login";
+      location.href = "/login";
       return;
     }
 
@@ -779,57 +795,112 @@ async function api(path, opts){
   return r.text();
 }
 
-function setupNav(){
-  const navItems = document.querySelectorAll('.nav-item[data-view]');
-  navItems.forEach(btn=>{
-    btn.addEventListener('click', () => {
-      const view = btn.getAttribute('data-view');
-      navItems.forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.view').forEach(v => {
-        v.classList.toggle('active', v.id === 'view-' + view);
+// ===== UI helpers =====
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function escapeAttr(str) {
+  return String(str || "")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function setupNav() {
+  const navItems = document.querySelectorAll(".nav-item[data-view]");
+  navItems.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const view = btn.getAttribute("data-view");
+
+      navItems.forEach((b) => b.classList.toggle("active", b === btn));
+      document.querySelectorAll(".view").forEach((v) => {
+        v.classList.toggle("active", v.id === "view-" + view);
       });
     });
   });
 }
 
-// ===== Modal helpers =====
-function openLessonModal(){
-  const overlay = document.getElementById('lessonModal');
-  overlay.classList.add('open');
-  overlay.setAttribute('aria-hidden', 'false');
-  document.getElementById('lessonCreateError').style.display = 'none';
-  document.getElementById('lessonName').focus();
-}
-function closeLessonModal(){
-  const overlay = document.getElementById('lessonModal');
-  overlay.classList.remove('open');
-  overlay.setAttribute('aria-hidden', 'true');
-}
-function resetLessonModal(){
-  document.getElementById('lessonName').value = '';
-  document.getElementById('lessonQuestionsInput').value = '';
-  document.getElementById('lessonContextFile').value = '';
-  document.getElementById('lessonCreateError').style.display = 'none';
-  document.getElementById('suggestionsBox').innerHTML = '';
+function openLessonModal() {
+  const overlay = document.getElementById("lessonModal");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  document.getElementById("lessonCreateError").style.display = "none";
+  document.getElementById("lessonName").focus();
 }
 
-// ===== PDF (COM TOKEN) =====
-async function downloadPdfForLesson(lessonId){
-  if(!lessonId) return alert("Seleciona uma aula.");
+function closeLessonModal() {
+  const overlay = document.getElementById("lessonModal");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
+}
+
+function resetLessonModal() {
+  document.getElementById("lessonName").value = "";
+  document.getElementById("lessonQuestionsInput").value = "";
+  document.getElementById("lessonContextFile").value = "";
+  document.getElementById("lessonCreateError").style.display = "none";
+  document.getElementById("suggestionsBox").innerHTML = "";
+}
+
+function bandToMinMax(band) {
+  if (!band) return { min: null, max: null };
+  if (band === "low") return { min: 0, max: 49 };
+  if (band === "mid") return { min: 50, max: 69 };
+  if (band === "high") return { min: 70, max: 100 };
+  return { min: null, max: null };
+}
+
+// ===== state =====
+let _lessonsCache = [];
+let _questionsCacheByLesson = {};
+let _studentsCacheByLesson = {};
+
+// ===== session / lesson status =====
+function updateLessonStatus(lessonId) {
+  const el = document.getElementById("lessonStatus");
+  const lesson = _lessonsCache.find((l) => l.id === lessonId);
+
+  if (!lesson) {
+    el.textContent = "—";
+    el.className = "pill";
+    return;
+  }
+
+  if (lesson.active) {
+    el.textContent = "Ativa";
+    el.className = "pill green";
+  } else {
+    el.textContent = "Em standby";
+    el.className = "pill";
+  }
+}
+
+// ===== PDF =====
+async function downloadPdfForLesson(lessonId) {
+  if (!lessonId) return alert("Seleciona uma aula.");
 
   const url = `${BASE}/reports/lesson/${encodeURIComponent(lessonId)}/pdf`;
   const r = await fetch(url, { headers: authHeaders() });
 
-  if(!r.ok){
+  if (!r.ok) {
     let msg = `Erro HTTP ${r.status}`;
-    try { const j = await r.json(); if(j && j.detail) msg = j.detail; } catch(_){}
-    if (r.status === 401){ location.href="/login"; return; }
+    try {
+      const j = await r.json();
+      if (j && j.detail) msg = j.detail;
+    } catch (_) {}
+    if (r.status === 401) {
+      location.href = "/login";
+      return;
+    }
     alert(msg);
     return;
   }
 
   const blob = await r.blob();
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   const href = URL.createObjectURL(blob);
   a.href = href;
   a.download = `relatorio_${lessonId}.pdf`;
@@ -839,24 +910,24 @@ async function downloadPdfForLesson(lessonId){
   URL.revokeObjectURL(href);
 }
 
-// ===== Sugestões IA =====
-async function suggestQuestionsFromContextFile(){
-  const fileInput = document.getElementById('lessonContextFile');
+// ===== sugestões IA =====
+async function suggestQuestionsFromContextFile() {
+  const fileInput = document.getElementById("lessonContextFile");
   const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
-  if(!file) return alert("Carrega primeiro um ficheiro .txt de contexto.");
+  if (!file) return alert("Carrega primeiro um ficheiro .txt de contexto.");
 
   const ctx = await file.text();
-  const box = document.getElementById('suggestionsBox');
+  const box = document.getElementById("suggestionsBox");
   box.innerHTML = `<div class="muted">A gerar sugestões…</div>`;
 
-  try{
-    const data = await api('/lessons/suggest-questions', {
-      method: 'POST',
-      body: JSON.stringify({ context: ctx, n: 6 })
+  try {
+    const data = await api("/lessons/suggest-questions", {
+      method: "POST",
+      body: JSON.stringify({ context: ctx, n: 6 }),
     });
 
     const qs = data.questions || [];
-    if(!qs.length){
+    if (!qs.length) {
       box.innerHTML = `<div class="muted">Não foram geradas sugestões.</div>`;
       return;
     }
@@ -864,282 +935,357 @@ async function suggestQuestionsFromContextFile(){
     box.innerHTML = `
       <div class="label">Sugestões</div>
       <div style="display:grid; gap:8px; margin-top:6px">
-        ${qs.map((q,i)=>`
+        ${qs
+          .map(
+            (q, i) => `
           <label style="display:flex; gap:10px; align-items:flex-start; border:1px solid #eef1f6; padding:10px; border-radius:10px">
             <input type="checkbox" class="suggestQ" data-q="${escapeAttr(q)}" checked />
             <div style="flex:1">
-              <div style="font-weight:600">Sugestão ${i+1}</div>
+              <div style="font-weight:600">Sugestão ${i + 1}</div>
               <div class="muted" style="margin-top:2px">${escapeHtml(q)}</div>
             </div>
           </label>
-        `).join('')}
+        `
+          )
+          .join("")}
       </div>
       <div class="row" style="justify-content:flex-end; margin-top:10px">
         <button type="button" class="button secondary" id="btnAddSelectedQs">Adicionar selecionadas</button>
       </div>
     `;
 
-    document.getElementById('btnAddSelectedQs').onclick = () => {
-      const picks = Array.from(document.querySelectorAll('.suggestQ'))
-        .filter(cb => cb.checked)
-        .map(cb => cb.getAttribute('data-q') || '')
-        .map(s => s.trim())
+    document.getElementById("btnAddSelectedQs").onclick = () => {
+      const picks = Array.from(document.querySelectorAll(".suggestQ"))
+        .filter((cb) => cb.checked)
+        .map((cb) => cb.getAttribute("data-q") || "")
+        .map((s) => s.trim())
         .filter(Boolean);
 
-      const ta = document.getElementById('lessonQuestionsInput');
-      const existing = ta.value ? ta.value.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+      const ta = document.getElementById("lessonQuestionsInput");
+      const existing = ta.value
+        ? ta.value.split("\n").map((s) => s.trim()).filter(Boolean)
+        : [];
+
       const merged = [...existing];
-
-      for (const q of picks){
-        if (!merged.some(x => x.toLowerCase() === q.toLowerCase())) merged.push(q);
+      for (const q of picks) {
+        if (!merged.some((x) => x.toLowerCase() === q.toLowerCase())) {
+          merged.push(q);
+        }
       }
-      ta.value = merged.join('\n');
+      ta.value = merged.join("\n");
     };
-
-  } catch(e){
-    box.innerHTML = `<div class="muted" style="color:#b42318">Erro: ${escapeHtml(e.message || 'falha')}</div>`;
+  } catch (e) {
+    box.innerHTML = `<div class="muted" style="color:#b42318">Erro: ${escapeHtml(
+      e.message || "falha"
+    )}</div>`;
   }
 }
 
-let _lessonsCache = [];
-let _questionsCacheByLesson = {};
-let _studentsCacheByLesson = {};
-
-function bandToMinMax(band){
-  if (!band) return {min:null, max:null};
-  if (band === 'low') return {min:0, max:49};
-  if (band === 'mid') return {min:50, max:69};
-  if (band === 'high') return {min:70, max:100};
-  return {min:null, max:null};
-}
-
-async function loadStudentsForLesson(lessonId){
-  try{
+// ===== data loaders =====
+async function loadStudentsForLesson(lessonId) {
+  try {
     const rows = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/students`);
     _studentsCacheByLesson[lessonId] = rows || [];
 
-    const sel = document.getElementById('studentFilter');
-    sel.innerHTML = ['<option value="">Todos</option>'].concat(
-      (_studentsCacheByLesson[lessonId]||[]).map(s => `<option value="${escapeAttr(s.studentId)}">${escapeHtml(s.studentName)} (${escapeHtml(s.studentId)})</option>`)
-    ).join('');
+    const options = ['<option value="">Todos</option>']
+      .concat(
+        (_studentsCacheByLesson[lessonId] || []).map(
+          (s) =>
+            `<option value="${escapeAttr(s.studentId)}">${escapeHtml(
+              s.studentName
+            )} (${escapeHtml(s.studentId)})</option>`
+        )
+      )
+      .join("");
 
-    const selD = document.getElementById('studentDash');
-    selD.innerHTML = ['<option value="">Todos</option>'].concat(
-      (_studentsCacheByLesson[lessonId]||[]).map(s => `<option value="${escapeAttr(s.studentId)}">${escapeHtml(s.studentName)} (${escapeHtml(s.studentId)})</option>`)
-    ).join('');
-  } catch(e){
+    document.getElementById("studentFilter").innerHTML = options;
+    document.getElementById("studentDash").innerHTML = options;
+  } catch (e) {
     _studentsCacheByLesson[lessonId] = [];
   }
 }
 
-async function loadLessons(){
-  const lessons = await api('/lessons');
+async function loadLessons() {
+  const lessons = await api("/lessons");
   _lessonsCache = lessons || [];
 
-  const selQuestions = document.getElementById('lesson');
-  const selAnswers = document.getElementById('lessonAnswers');
-  const selDash = document.getElementById('lessonDash');
+  const selQuestions = document.getElementById("lesson");
+  const selAnswers = document.getElementById("lessonAnswers");
+  const selDash = document.getElementById("lessonDash");
 
-  if (!_lessonsCache.length){
+  if (!_lessonsCache.length) {
     selQuestions.innerHTML = `<option value="" selected>Sem aulas</option>`;
     selAnswers.innerHTML = `<option value="" selected>Sem aulas</option>`;
     selDash.innerHTML = `<option value="" selected>Sem aulas</option>`;
+    updateLessonStatus("");
     return;
   }
 
-  const options = _lessonsCache.map(l=>{
-    const label = `${l.name}${l.active ? ' • (ativa)' : ''}`;
-    return `<option value="${l.id}">${label}</option>`;
-  }).join('');
+  const options = _lessonsCache
+    .map((l) => {
+      const label = `${l.name}${l.active ? " • (ativa)" : ""}`;
+      return `<option value="${l.id}">${escapeHtml(label)}</option>`;
+    })
+    .join("");
 
   selQuestions.innerHTML = options;
   selAnswers.innerHTML = options;
   selDash.innerHTML = options;
 
-  const active = _lessonsCache.find(l=>l.active);
-  const chosenId = (active && active.id) ? active.id : _lessonsCache[0].id;
+  const active = _lessonsCache.find((l) => l.active);
+  const chosenId = active?.id || _lessonsCache[0].id;
 
   selQuestions.value = chosenId;
   selAnswers.value = chosenId;
   selDash.value = chosenId;
+
+  updateLessonStatus(chosenId);
 
   await refreshForLesson(chosenId);
   await refreshAnswersView(chosenId);
   await refreshDashboard(chosenId);
   await refreshAllLessonsOverview();
 
-  selQuestions.onchange = async ()=> {
+  selQuestions.onchange = async () => {
     const id = selQuestions.value;
-    selAnswers.value = id; selDash.value = id;
+    selAnswers.value = id;
+    selDash.value = id;
+    updateLessonStatus(id);
     await refreshForLesson(id);
     await refreshAnswersView(id);
     await refreshDashboard(id);
   };
-  selAnswers.onchange = async ()=> {
+
+  selAnswers.onchange = async () => {
     const id = selAnswers.value;
-    selQuestions.value = id; selDash.value = id;
+    selQuestions.value = id;
+    selDash.value = id;
+    updateLessonStatus(id);
     await refreshForLesson(id);
     await refreshAnswersView(id);
     await refreshDashboard(id);
   };
-  selDash.onchange = async ()=> {
+
+  selDash.onchange = async () => {
     const id = selDash.value;
-    selQuestions.value = id; selAnswers.value = id;
+    selQuestions.value = id;
+    selAnswers.value = id;
+    updateLessonStatus(id);
     await refreshForLesson(id);
     await refreshAnswersView(id);
     await refreshDashboard(id);
   };
 }
 
-async function refreshForLesson(lessonId){
-  const qs = await api(`/lessons/${encodeURIComponent(lessonId)}/questions?onlyActive=false`);
+async function refreshForLesson(lessonId) {
+  updateLessonStatus(lessonId);
+
+  const qs = await api(
+    `/lessons/${encodeURIComponent(lessonId)}/questions?onlyActive=false`
+  );
   _questionsCacheByLesson[lessonId] = qs || [];
 
-  const box = document.getElementById('questions');
-  box.innerHTML = qs.length ? qs.map(q => `
+  const box = document.getElementById("questions");
+  box.innerHTML = qs.length
+    ? qs
+        .map(
+          (q) => `
     <div class="row" style="justify-content:space-between;border:1px solid #eef1f6;padding:10px;border-radius:10px;margin:6px 0">
       <div>
         <div style="font-weight:600">${escapeHtml(q.text)}</div>
         <div class="label">Criada em ${new Date(q.createdAt).toLocaleString()}</div>
       </div>
       <div class="row">
-        <span class="pill">${q.active ? 'Ativa' : 'Inativa'}</span>
+        <span class="pill">${q.active ? "Ativa" : "Inativa"}</span>
         <button class="button danger" onclick="delQ('${escapeAttr(q.id)}')">Remover</button>
       </div>
     </div>
-  `).join('') : '<div class="muted">Sem perguntas nesta aula.</div>';
+  `
+        )
+        .join("")
+    : '<div class="muted">Sem perguntas nesta aula.</div>';
 
-  const qfilter = document.getElementById('qfilter');
-  qfilter.innerHTML = '<option value="">Todas</option>' + qs.map(q=>`<option value="${escapeAttr(q.id)}">${escapeHtml((q.text||'').slice(0,80))}${q.text.length>80?'…':''}</option>`).join('');
+  const qOptions =
+    '<option value="">Todas</option>' +
+    qs
+      .map(
+        (q) =>
+          `<option value="${escapeAttr(q.id)}">${escapeHtml(
+            (q.text || "").slice(0, 80)
+          )}${q.text.length > 80 ? "…" : ""}</option>`
+      )
+      .join("");
 
-  const qDash = document.getElementById('qDash');
-  qDash.innerHTML = '<option value="">Todas</option>' + qs.map(q=>`<option value="${escapeAttr(q.id)}">${escapeHtml((q.text||'').slice(0,80))}${q.text.length>80?'…':''}</option>`).join('');
+  document.getElementById("qfilter").innerHTML = qOptions;
+  document.getElementById("qDash").innerHTML = qOptions;
 
   await loadAnswersCount(lessonId);
   await loadErrorsReal(lessonId);
   await loadEvolution(lessonId);
 }
 
-async function refreshAnswersView(lessonId){
+async function refreshAnswersView(lessonId) {
   await loadStudentsForLesson(lessonId);
 
-  document.getElementById('btnRefreshAnswers').onclick = () => loadAnswersWithFilters(lessonId);
-  document.getElementById('qfilter').onchange = () => loadAnswersWithFilters(lessonId);
-  document.getElementById('studentFilter').onchange = () => loadAnswersWithFilters(lessonId);
-  document.getElementById('bandFilter').onchange = () => loadAnswersWithFilters(lessonId);
-  document.getElementById('fromDate').onchange = () => loadAnswersWithFilters(lessonId);
-  document.getElementById('toDate').onchange = () => loadAnswersWithFilters(lessonId);
-  document.getElementById('limitFilter').onchange = () => loadAnswersWithFilters(lessonId);
+  document.getElementById("btnRefreshAnswers").onclick = () =>
+    loadAnswersWithFilters(lessonId);
+  document.getElementById("qfilter").onchange = () =>
+    loadAnswersWithFilters(lessonId);
+  document.getElementById("studentFilter").onchange = () =>
+    loadAnswersWithFilters(lessonId);
+  document.getElementById("bandFilter").onchange = () =>
+    loadAnswersWithFilters(lessonId);
+  document.getElementById("fromDate").onchange = () =>
+    loadAnswersWithFilters(lessonId);
+  document.getElementById("toDate").onchange = () =>
+    loadAnswersWithFilters(lessonId);
+  document.getElementById("limitFilter").onchange = () =>
+    loadAnswersWithFilters(lessonId);
 
   await loadAnswersWithFilters(lessonId);
 }
 
-async function refreshDashboard(lessonId){
+async function refreshDashboard(lessonId) {
   await loadStudentsForLesson(lessonId);
 
-  document.getElementById('btnRefreshDash').onclick = () => refreshDashboard(lessonId);
-  document.getElementById('studentDash').onchange = () => refreshDashboard(lessonId);
-  document.getElementById('qDash').onchange = () => refreshDashboard(lessonId);
-  document.getElementById('bandDash').onchange = () => refreshDashboard(lessonId);
+  document.getElementById("btnRefreshDash").onclick = () =>
+    refreshDashboard(lessonId);
+  document.getElementById("studentDash").onchange = () =>
+    refreshDashboard(lessonId);
+  document.getElementById("qDash").onchange = () =>
+    refreshDashboard(lessonId);
+  document.getElementById("bandDash").onchange = () =>
+    refreshDashboard(lessonId);
 
-  document.getElementById('btnExportPdf').onclick = () => downloadPdfForLesson(lessonId);
+  document.getElementById("btnExportPdf").onclick = () =>
+    downloadPdfForLesson(lessonId);
 
   await loadDashboardData(lessonId);
 }
 
-async function loadDashboardData(lessonId){
-  const sid = document.getElementById('studentDash').value || '';
-  const qid = document.getElementById('qDash').value || '';
-  const band = document.getElementById('bandDash').value || '';
+async function loadDashboardData(lessonId) {
+  const sid = document.getElementById("studentDash").value || "";
+  const qid = document.getElementById("qDash").value || "";
+  const band = document.getElementById("bandDash").value || "";
   const mm = bandToMinMax(band);
 
   const sp = new URLSearchParams();
-  if (qid) sp.append('questionId', qid);
-  if (sid) sp.append('studentId', sid);
-  if (mm.min !== null) sp.append('minScore', String(mm.min));
-  if (mm.max !== null) sp.append('maxScore', String(mm.max));
+  if (qid) sp.append("questionId", qid);
+  if (sid) sp.append("studentId", sid);
+  if (mm.min !== null) sp.append("minScore", String(mm.min));
+  if (mm.max !== null) sp.append("maxScore", String(mm.max));
 
   let summary = null;
-  try{
-    summary = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/summary?` + sp.toString());
-  } catch(e){
+  try {
+    summary = await api(
+      `/reports/lesson/${encodeURIComponent(lessonId)}/summary?` + sp.toString()
+    );
+  } catch (e) {
     summary = null;
   }
 
   const ep = new URLSearchParams();
-  if (qid) ep.append('questionId', qid);
-  if (sid) ep.append('studentId', sid);
-  if (mm.min !== null) ep.append('minScore', String(mm.min));
-  if (mm.max !== null) ep.append('maxScore', String(mm.max));
-  ep.append('top','8');
+  if (qid) ep.append("questionId", qid);
+  if (sid) ep.append("studentId", sid);
+  if (mm.min !== null) ep.append("minScore", String(mm.min));
+  if (mm.max !== null) ep.append("maxScore", String(mm.max));
+  ep.append("top", "8");
 
   let errors = [];
-  try{
-    errors = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/errors-top?` + ep.toString());
-  } catch(e){
+  try {
+    errors = await api(
+      `/reports/lesson/${encodeURIComponent(lessonId)}/errors-top?` + ep.toString()
+    );
+  } catch (e) {
     errors = [];
   }
 
   renderDashboard(summary, errors);
 }
 
-function renderDashboard(summary, errors){
-  const s = summary || { totalResponses:0, totalStudents:0, avg:0, histBins:[0,0,0,0,0,0,0,0,0,0] };
+function renderDashboard(summary, errors) {
+  const s = summary || {
+    totalResponses: 0,
+    totalStudents: 0,
+    avg: 0,
+    histBins: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  };
 
-  document.getElementById('kDashTotal').textContent = String(s.totalResponses || 0);
-  document.getElementById('kDashStudents').textContent = String(s.totalStudents || 0);
-  document.getElementById('kDashAvg').textContent = `${s.avg || 0}%`;
+  document.getElementById("kDashTotal").textContent = String(s.totalResponses || 0);
+  document.getElementById("kDashStudents").textContent = String(s.totalStudents || 0);
+  document.getElementById("kDashAvg").textContent = `${s.avg || 0}%`;
 
-  renderHistogram(s.histBins || [0,0,0,0,0,0,0,0,0,0]);
+  renderHistogram(s.histBins || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  const ebox = document.getElementById('dashErrors');
-  ebox.innerHTML = (errors && errors.length)
-    ? errors.map(r => `
+  const ebox = document.getElementById("dashErrors");
+  ebox.innerHTML =
+    errors && errors.length
+      ? errors
+          .map(
+            (r) => `
         <div class="row" style="justify-content:space-between;border:1px solid #eef1f6;border-radius:10px;padding:8px 10px;margin:6px 0">
           <div style="flex:1">${escapeHtml(r.pattern)}</div>
           <div class="pill">${r.count}</div>
         </div>
-      `).join('')
-    : `<div class="muted">Sem dados.</div>`;
+      `
+          )
+          .join("")
+      : `<div class="muted">Sem dados.</div>`;
 }
 
-function renderHistogram(bins){
-  const bars = document.getElementById('histBars');
-  const labels = document.getElementById('histLabels');
+function renderHistogram(bins) {
+  const bars = document.getElementById("histBars");
+  const labels = document.getElementById("histLabels");
 
-  const maxV = Math.max(1, ...(bins||[1]));
-  const ranges = ['0–9','10–19','20–29','30–39','40–49','50–59','60–69','70–79','80–89','90–100'];
+  const maxV = Math.max(1, ...(bins || [1]));
+  const ranges = [
+    "0–9",
+    "10–19",
+    "20–29",
+    "30–39",
+    "40–49",
+    "50–59",
+    "60–69",
+    "70–79",
+    "80–89",
+    "90–100",
+  ];
 
-  bars.innerHTML = (bins||[]).map((v, i) => {
-    const h = Math.round((v / maxV) * 100);
-    return `<div class="bar" style="height:${h}%">
-      <div class="bar-tip">${ranges[i]}: ${v}</div>
-    </div>`;
-  }).join('');
+  bars.innerHTML = (bins || [])
+    .map((v, i) => {
+      const h = Math.round((v / maxV) * 100);
+      return `<div class="bar" style="height:${h}%">
+        <div class="bar-tip">${ranges[i]}: ${v}</div>
+      </div>`;
+    })
+    .join("");
 
-  labels.innerHTML = ranges.map(r => `<span>${r.split('–')[0]}</span>`).join('');
+  labels.innerHTML = ranges.map((r) => `<span>${r.split("–")[0]}</span>`).join("");
 }
 
-// visão geral: média por aula
-async function refreshAllLessonsOverview(){
-  const target = document.getElementById('allLessonsAvg');
-  if (!_lessonsCache.length){
+async function refreshAllLessonsOverview() {
+  const target = document.getElementById("allLessonsAvg");
+
+  if (!_lessonsCache.length) {
     target.innerHTML = `<div class="muted">Sem aulas.</div>`;
     return;
   }
 
   const rows = [];
-  for (const l of _lessonsCache){
-    try{
+  for (const l of _lessonsCache) {
+    try {
       const s = await api(`/reports/lesson/${encodeURIComponent(l.id)}/summary`);
-      rows.push({ lessonId:l.id, name:l.name, avg:s.avg||0, total:s.totalResponses||0 });
-    } catch(e){
-      rows.push({ lessonId:l.id, name:l.name, avg:0, total:0 });
+      rows.push({ lessonId: l.id, name: l.name, avg: s.avg || 0, total: s.totalResponses || 0 });
+    } catch (e) {
+      rows.push({ lessonId: l.id, name: l.name, avg: 0, total: 0 });
     }
   }
-  rows.sort((a,b)=> (b.avg - a.avg) || (b.total - a.total));
 
-  target.innerHTML = rows.map(r => `
+  rows.sort((a, b) => b.avg - a.avg || b.total - a.total);
+
+  target.innerHTML = rows
+    .map(
+      (r) => `
     <div class="row" style="justify-content:space-between;border:1px solid #eef1f6;border-radius:10px;padding:8px 10px;margin:6px 0">
       <div style="flex:1">
         <div style="font-weight:600">${escapeHtml(r.name)}</div>
@@ -1150,165 +1296,197 @@ async function refreshAllLessonsOverview(){
         <button class="button secondary" onclick="selectLessonDash('${escapeAttr(r.lessonId)}')">Abrir</button>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join("");
 }
 
-function selectLessonDash(lessonId){
-  document.getElementById('lessonDash').value = lessonId;
-  document.getElementById('lesson').value = lessonId;
-  document.getElementById('lessonAnswers').value = lessonId;
+function selectLessonDash(lessonId) {
+  document.getElementById("lessonDash").value = lessonId;
+  document.getElementById("lesson").value = lessonId;
+  document.getElementById("lessonAnswers").value = lessonId;
+
+  updateLessonStatus(lessonId);
   refreshForLesson(lessonId);
   refreshAnswersView(lessonId);
   refreshDashboard(lessonId);
 }
 
-// answers count (questions view)
-async function loadAnswersCount(lessonId){
+async function loadAnswersCount(lessonId) {
   const params = new URLSearchParams();
-  params.append('lessonId', lessonId);
+  params.append("lessonId", lessonId);
   const data = await api(`/answers?` + params.toString());
-  document.getElementById('kTotalQuestionsView').textContent = data.length;
+  document.getElementById("kTotalQuestionsView").textContent = data.length;
 }
 
-// errors real (questions view)
-async function loadErrorsReal(lessonId){
-  const target = document.getElementById('errorsQuestionsView');
-  try{
-    const rows = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/errors-top?top=8`);
-    target.innerHTML =
-      rows.length ? rows.map(r => `
+async function loadErrorsReal(lessonId) {
+  const target = document.getElementById("errorsQuestionsView");
+  try {
+    const rows = await api(
+      `/reports/lesson/${encodeURIComponent(lessonId)}/errors-top?top=8`
+    );
+    target.innerHTML = rows.length
+      ? rows
+          .map(
+            (r) => `
         <div class="row" style="justify-content:space-between;border:1px solid #eef1f6;border-radius:10px;padding:8px 10px;margin:6px 0">
           <div>${escapeHtml(r.pattern)}</div>
           <div class="pill">${r.count}</div>
-        </div>`).join('') : '<div class="muted">Sem dados.</div>';
-  } catch(e){
+        </div>`
+          )
+          .join("")
+      : '<div class="muted">Sem dados.</div>';
+  } catch (e) {
     target.innerHTML = '<div class="muted">Sem dados.</div>';
   }
 }
 
-async function loadEvolution(lessonId){
-  const target = document.getElementById('evolutionQuestionsView');
-  try{
+async function loadEvolution(lessonId) {
+  const target = document.getElementById("evolutionQuestionsView");
+  try {
     const rows = await api(`/reports/lesson/${encodeURIComponent(lessonId)}/evolution`);
-    target.innerHTML =
-      rows.length ? rows.map(r => `
+    target.innerHTML = rows.length
+      ? rows
+          .map(
+            (r) => `
         <div class="row" style="justify-content:space-between;border-bottom:1px dashed #eef1f6;padding:6px 0">
           <div>${escapeHtml(r.date)}</div><b>${r.avg}%</b>
-        </div>`).join('') : '<div class="muted">Sem dados.</div>';
-  } catch(e){
+        </div>`
+          )
+          .join("")
+      : '<div class="muted">Sem dados.</div>';
+  } catch (e) {
     target.innerHTML = '<div class="muted">Sem dados.</div>';
   }
 }
 
-// answers table
-async function loadAnswersWithFilters(lessonId){
-  const qid = document.getElementById('qfilter').value || '';
-  const sid = document.getElementById('studentFilter').value || '';
-  const band = document.getElementById('bandFilter').value || '';
-  const fromD = document.getElementById('fromDate').value || '';
-  const toD = document.getElementById('toDate').value || '';
-  const limit = document.getElementById('limitFilter').value || '300';
+async function loadAnswersWithFilters(lessonId) {
+  const qid = document.getElementById("qfilter").value || "";
+  const sid = document.getElementById("studentFilter").value || "";
+  const band = document.getElementById("bandFilter").value || "";
+  const fromD = document.getElementById("fromDate").value || "";
+  const toD = document.getElementById("toDate").value || "";
+  const limit = document.getElementById("limitFilter").value || "300";
   const mm = bandToMinMax(band);
 
   const params = new URLSearchParams();
-  params.append('lessonId', lessonId);
-  if (qid) params.append('questionId', qid);
-  if (sid) params.append('studentId', sid);
-  if (mm.min !== null) params.append('minScore', String(mm.min));
-  if (mm.max !== null) params.append('maxScore', String(mm.max));
-  if (fromD) params.append('fromDate', fromD);
-  if (toD) params.append('toDate', toD);
-  if (limit) params.append('limit', String(limit));
+  params.append("lessonId", lessonId);
+  if (qid) params.append("questionId", qid);
+  if (sid) params.append("studentId", sid);
+  if (mm.min !== null) params.append("minScore", String(mm.min));
+  if (mm.max !== null) params.append("maxScore", String(mm.max));
+  if (fromD) params.append("fromDate", fromD);
+  if (toD) params.append("toDate", toD);
+  if (limit) params.append("limit", String(limit));
 
   const data = await api(`/answers?` + params.toString());
-  const tb = document.getElementById('answers');
+  const tb = document.getElementById("answers");
 
-  if(!data.length){
+  if (!data.length) {
     tb.innerHTML = '<tr><td colspan="5" class="muted">Sem dados.</td></tr>';
     return;
   }
 
-  tb.innerHTML = data.map(a => {
-    let mistakes = [];
-    try { mistakes = a.mistakes ? JSON.parse(a.mistakes) : []; if (!Array.isArray(mistakes)) mistakes = []; }
-    catch(e){ mistakes = []; }
+  tb.innerHTML = data
+    .map((a) => {
+      let mistakes = [];
+      try {
+        mistakes = a.mistakes ? JSON.parse(a.mistakes) : [];
+        if (!Array.isArray(mistakes)) mistakes = [];
+      } catch (e) {
+        mistakes = [];
+      }
 
-    let overview = a.rationale || '';
-    if (!overview && mistakes.length) overview = mistakes.join(' ');
-    const shortOverview = overview ? (overview.length > 180 ? overview.slice(0,180) + '…' : overview) : '-';
-    const errsTooltip = mistakes.length ? mistakes.map(m => `• ${m}`).join('\n') : '';
+      let overview = a.rationale || "";
+      if (!overview && mistakes.length) overview = mistakes.join(" ");
+      const shortOverview =
+        overview ? (overview.length > 180 ? overview.slice(0, 180) + "…" : overview) : "-";
+      const errsTooltip = mistakes.length ? mistakes.map((m) => `• ${m}`).join("\n") : "";
 
-    const safeText = escapeHtml(a.text || '');
-    const shortText = safeText.length>140 ? safeText.slice(0,140)+'…' : safeText;
+      const safeText = escapeHtml(a.text || "");
+      const shortText = safeText.length > 140 ? safeText.slice(0, 140) + "…" : safeText;
 
-    return `
+      return `
       <tr>
-        <td><b>${escapeHtml(a.studentName || '')}</b><div class="label">${escapeHtml(a.studentId || '')}</div></td>
-        <td title="${safeText.replace(/"/g,'&quot;')}">${shortText}</td>
-        <td>${a.score ?? '-'}</td>
-        <td title="${escapeHtml(errsTooltip).replace(/"/g,'&quot;')}">${escapeHtml(shortOverview)}</td>
+        <td><b>${escapeHtml(a.studentName || "")}</b><div class="label">${escapeHtml(
+        a.studentId || ""
+      )}</div></td>
+        <td title="${safeText.replace(/"/g, "&quot;")}">${shortText}</td>
+        <td>${a.score ?? "-"}</td>
+        <td title="${escapeHtml(errsTooltip).replace(/"/g, "&quot;")}">${escapeHtml(
+        shortOverview
+      )}</td>
         <td class="label">${new Date(a.createdAt).toLocaleString()}</td>
       </tr>
     `;
-  }).join('');
+    })
+    .join("");
 }
 
-// manage questions
-async function addQ(){
-  const lessonId = document.getElementById('lesson').value;
-  const txt = (document.getElementById('qtext').value || '').trim();
-  if(!lessonId) return alert('Seleciona uma aula.');
-  if(!txt) return alert('Escreve a pergunta.');
+// ===== questions =====
+async function addQ() {
+  const lessonId = document.getElementById("lesson").value;
+  const txt = (document.getElementById("qtext").value || "").trim();
+
+  if (!lessonId) return alert("Seleciona uma aula.");
+  if (!txt) return alert("Escreve a pergunta.");
 
   await api(`/lessons/${encodeURIComponent(lessonId)}/questions`, {
-    method:'POST',
-    body: JSON.stringify({ text: txt, active: true })
+    method: "POST",
+    body: JSON.stringify({ text: txt, active: true }),
   });
-  document.getElementById('qtext').value = '';
+
+  document.getElementById("qtext").value = "";
   await refreshForLesson(lessonId);
   await refreshDashboard(lessonId);
   await refreshAllLessonsOverview();
 }
 
-async function delQ(id){
-  if(!confirm('Remover esta pergunta?')) return;
-  await api(`/questions/${encodeURIComponent(id)}`, { method:'DELETE' });
-  const lessonId = document.getElementById('lesson').value;
+async function delQ(id) {
+  if (!confirm("Remover esta pergunta?")) return;
+
+  await api(`/questions/${encodeURIComponent(id)}`, { method: "DELETE" });
+
+  const lessonId = document.getElementById("lesson").value;
   await refreshForLesson(lessonId);
   await refreshDashboard(lessonId);
 }
 
-async function createLesson(){
-  const name = (document.getElementById('lessonName').value || '').trim();
-  const fileInput = document.getElementById('lessonContextFile');
+// ===== create / activate lesson =====
+async function createLesson() {
+  const name = (document.getElementById("lessonName").value || "").trim();
+  const fileInput = document.getElementById("lessonContextFile");
   const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
 
-  const qLines = (document.getElementById('lessonQuestionsInput').value || '')
-    .split('\n').map(s=>s.trim()).filter(Boolean);
+  const qLines = (document.getElementById("lessonQuestionsInput").value || "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-  const errBox = document.getElementById('lessonCreateError');
-  errBox.style.display = 'none';
+  const errBox = document.getElementById("lessonCreateError");
+  errBox.style.display = "none";
 
-  if (!name){
-    errBox.textContent = 'Indica o nome da aula (ex.: Aula 9).';
-    errBox.style.display = 'block';
+  if (!name) {
+    errBox.textContent = "Indica o nome da aula (ex.: Aula 9).";
+    errBox.style.display = "block";
     return;
   }
 
   let context = "";
   if (file) {
-    try { context = await file.text(); }
-    catch (e) {
-      errBox.textContent = 'Não foi possível ler o ficheiro .txt.';
-      errBox.style.display = 'block';
+    try {
+      context = await file.text();
+    } catch (e) {
+      errBox.textContent = "Não foi possível ler o ficheiro .txt.";
+      errBox.style.display = "block";
       return;
     }
   }
 
-  try{
-    const lesson = await api('/lessons', {
-      method:'POST',
-      body: JSON.stringify({ name, context, questions: qLines })
+  try {
+    const lesson = await api("/lessons", {
+      method: "POST",
+      body: JSON.stringify({ name, context, questions: qLines }),
     });
 
     closeLessonModal();
@@ -1317,46 +1495,74 @@ async function createLesson(){
     await loadLessons();
     await refreshAllLessonsOverview();
 
-    document.getElementById('lessonDash').value = lesson.id;
-    document.getElementById('lesson').value = lesson.id;
-    document.getElementById('lessonAnswers').value = lesson.id;
+    document.getElementById("lessonDash").value = lesson.id;
+    document.getElementById("lesson").value = lesson.id;
+    document.getElementById("lessonAnswers").value = lesson.id;
+
+    updateLessonStatus(lesson.id);
 
     await refreshForLesson(lesson.id);
     await refreshAnswersView(lesson.id);
     await refreshDashboard(lesson.id);
-  } catch(e){
-    errBox.textContent = e.message || 'Erro ao criar aula.';
-    errBox.style.display = 'block';
+  } catch (e) {
+    errBox.textContent = e.message || "Erro ao criar aula.";
+    errBox.style.display = "block";
   }
 }
 
-// helpers
-function escapeHtml(str){
-  return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-}
-function escapeAttr(str){
-  return String(str||'').replaceAll('"','&quot;').replaceAll("'","&#39;");
+async function activateLesson() {
+  const lessonId = document.getElementById("lesson").value;
+  if (!lessonId) return alert("Seleciona uma aula.");
+
+  try {
+    await api("/lessons/activate", {
+      method: "POST",
+      body: JSON.stringify({ lessonId }),
+    });
+
+    await loadLessons();
+    await refreshAllLessonsOverview();
+
+    document.getElementById("lesson").value = lessonId;
+    document.getElementById("lessonAnswers").value = lessonId;
+    document.getElementById("lessonDash").value = lessonId;
+
+    updateLessonStatus(lessonId);
+
+    await refreshForLesson(lessonId);
+    await refreshAnswersView(lessonId);
+    await refreshDashboard(lessonId);
+
+    alert("Aula ativada com sucesso.");
+  } catch (e) {
+    alert(e.message || "Erro ao ativar a aula.");
+  }
 }
 
-// init
+// ===== init =====
 requireLogin();
 fetchMe();
 setupNav();
 
-document.getElementById('btnAdd').onclick = addQ;
-document.getElementById('btnCreateLesson').onclick = () => { resetLessonModal(); openLessonModal(); };
-document.getElementById('btnCloseLessonModal').onclick = closeLessonModal;
-document.getElementById('btnCancelLesson').onclick = closeLessonModal;
-document.getElementById('btnSubmitLesson').onclick = createLesson;
-document.getElementById('btnSuggestQs').onclick = suggestQuestionsFromContextFile;
+document.getElementById("btnAdd").onclick = addQ;
+document.getElementById("btnActivateLesson").onclick = activateLesson;
+document.getElementById("btnCreateLesson").onclick = () => {
+  resetLessonModal();
+  openLessonModal();
+};
+document.getElementById("btnCloseLessonModal").onclick = closeLessonModal;
+document.getElementById("btnCancelLesson").onclick = closeLessonModal;
+document.getElementById("btnSubmitLesson").onclick = createLesson;
+document.getElementById("btnSuggestQs").onclick = suggestQuestionsFromContextFile;
 
-document.getElementById('lessonModal').addEventListener('click', (e)=>{
-  if (e.target && e.target.id === 'lessonModal') closeLessonModal();
+document.getElementById("lessonModal").addEventListener("click", (e) => {
+  if (e.target && e.target.id === "lessonModal") closeLessonModal();
 });
-document.addEventListener('keydown', (e)=>{
-  if (e.key === 'Escape'){
-    const overlay = document.getElementById('lessonModal');
-    if (overlay.classList.contains('open')) closeLessonModal();
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const overlay = document.getElementById("lessonModal");
+    if (overlay.classList.contains("open")) closeLessonModal();
   }
 });
 
