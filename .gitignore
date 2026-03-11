@@ -5,5 +5,4 @@ venv/
 env/
 node_modules/
 smartedu_lessons.db
-dist/
 .env
