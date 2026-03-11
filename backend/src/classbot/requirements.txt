@@ -10,3 +10,4 @@ matplotlib
 numpy
 httpx
 python-dotenv
+reportlab
