@@ -6,3 +6,7 @@ python-multipart==0.0.9
 jinja2
 ollama
 transformers
+matplotlib
+numpy
+httpx
+python-dotenv
