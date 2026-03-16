@@ -283,12 +283,17 @@ def _get_current_user(authorization: str = Header(default="")) -> User:
         user = s.get(User, st.userId)
         if not user:
             raise HTTPException(401, "Utilizador inválido.")
+
+        logger.info(
+            "[AUTH] current_user | token=%s... | userId=%s | username=%s | role=%r",
+            token[:8],
+            st.userId,
+            getattr(user, "username", None),
+            getattr(user, "role", None),
+        )
         return user
 
 
-def _require_role(user: User, role: str) -> None:
-    if user.role != role:
-        raise HTTPException(403, "Sem permissões.")
 
 
 def _seed_teacher() -> None:
@@ -601,6 +606,16 @@ def get_active_lesson(authorization: str = Header(default="")):
 @app.post("/lessons")
 def create_lesson(payload: CreateLessonIn, authorization: str = Header(default="")):
     user = _get_current_user(authorization)
+    
+    logger.info(
+        "[LESSONS] create_lesson | username=%s | role=%r | name=%r | context_len=%d | q_count=%d",
+        getattr(user, "username", None),
+        getattr(user, "role", None),
+        payload.name,
+        len(payload.context or ""),
+        len(payload.questions or []),
+    )
+
     _require_role(user, "teacher")
 
     name = (payload.name or "").strip()
