@@ -294,7 +294,15 @@ def _get_current_user(authorization: str = Header(default="")) -> User:
         return user
 
 
-
+def _require_role(user: User, role: str) -> None:
+    logger.info(
+        "[AUTH] require_role | username=%s | user.role=%r | required=%r",
+        getattr(user, "username", None),
+        getattr(user, "role", None),
+        role,
+    )
+    if (user.role or "").strip().lower() != role.strip().lower():
+        raise HTTPException(403, "Sem permissões.")
 
 def _seed_teacher() -> None:
     username = "d1234"
